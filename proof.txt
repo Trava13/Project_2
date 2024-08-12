@@ -1,0 +1,79 @@
+Důkaz (symbol --> znamená vystup STDOUT 1)
+*******************************************
+1. Tvorba a nastavení uživatele
+-----------------------------------
+UID a GID ověřím příkazem:
+
+id automata -> uid=3000(automata) gid=3000(automata) groups=3000(automata)
+
+Poznámku ověřím příkazem:
+
+cat /etc/passwd | grep "automata" --> automata:x:3000:3000:Automated Monitoring User:/home/automata:/bin/bash
+
+2. Tvorba a nastavené adresáře
+---------------------------------
+Práva, vlastníka a skupinu ověřím příkazem:
+
+
+sudo ls -la /monitoring --> 
+                         |
+                         V
+total 8
+drwxrwx---  2 root automata 4096 Aug  8 16:20 .      <---- adresář /monitoring
+drwxr-xr-x 21 root root     4096 Aug  8 16:20 ..
+
+3. Monitorovací skript
+-------------------------
+Stažení souboru a práva runmon.sh ověřím příkazem:
+
+sudo ls -la /root | grep "runmon.sh" --> -rwx------  1 root root 3669 Aug  8 16:34 runmon.sh
+
+4. Nastavení usera automata
+------------------------------
+Ověření, že lze použít sudo pouze na script /root/runmon.sh provedu tak, že se nejdříve přihlásím jako uživatel automata příkazem:
+
+sudo su automata
+
+poté vyzkouším zda mužu použít sudo a to přikazem:
+
+sudo ls --> zadam heslo --> Sorry, user automata is not allowed to execute '/bin/ls' as root on travnicekjakub-hotmail.com.
+
+dále otestuji zda můžu spustit sudo na script /root/runmon.sh:
+
+sudo sh /root/runmon.sh --> Lze bez hesla spustit script
+                     
+5. Nastavení crontabu
+----------------------
+Zjistím obsah crontabu uživatele automat následujícím příkazem:
+
+sudo crontab -l -u automata --> 
+                              |
+                              V
+0 8-17/2 * * 1-5 sudo /root/runmon.sh
+0 22 * * 7 zip -m /home/automata/mon_archive.zip /monitoring/*
+
+Pro ověření funkčnosti můžeme nahlédnout do složky /monitoring ověřit zda se nachází logy(pozor po 22:00 v neděli budou složka prázdna soubory se začnou objevovat až po 8 hodině v pondělí)
+
+sudo ls -la /monitoring -->
+                          |
+                          V 
+total 20
+drwxrwx---  2 root automata 4096 Aug 12 05:10 .
+drwxr-xr-x 21 root root     4096 Aug  8 16:20 ..
+-rw-r--r--  1 root root      492 Aug 12 05:09 runmon-2024-08-12-05-09-56.log
+-rw-r--r--  1 root root      562 Aug 12 05:10 runmon-2024-08-12-05-10-00.log
+-rw-r--r--  1 root root      450 Aug 12 05:10 runmon-2024-08-12-05-10-01.log
+
+Ověřní zda se nachazí zip soubor ve domovske složce automata
+
+sudo ls -la /home/automata-->
+                            |
+                            V
+total 28
+drwx------ 2 automata automata 4096 Aug 12 05:15 .
+drwxr-xr-x 4 root     root     4096 Aug  8 16:04 ..
+-rw------- 1 automata automata  804 Aug 12 04:58 .bash_history
+-rw-r--r-- 1 automata automata   18 Aug  2  2016 .bash_logout
+-rw-r--r-- 1 automata automata  193 Aug  2  2016 .bash_profile
+-rw-r--r-- 1 automata automata  231 Aug  2  2016 .bashrc
+-rw-rw-r-- 1 automata automata 1394 Aug 12 05:15 mon_archive.zip

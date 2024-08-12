@@ -1,0 +1,44 @@
+Postup
+**********
+1. Tvorba uživatele a nastavení uživatele
+-------------------------------------------
+Dle zadaní vytvořím uživatele s UID a GID 3000 a poznámkou "Automated Monitoring User" a to příkazem:
+
+sudo useradd -u 3000 -c "Automated Monitoring User" automata
+
+2. Tvorba a nastavené adresáře
+---------------------------------
+Dle zadaní vytvořím adresář s pravý 770 a to příkazem:
+
+sudo mkdir -m 770 /monitoring
+
+Poté změnim skupinu na automata a to příkazem:
+
+sudo chgrp automata /monitoring
+
+3. Monitorovací skript
+-------------------------
+Stáhnu soubor runmon.sh do adresáře /root:
+
+sudo wget -P /root https://raw.githubusercontent.com/ENGETO-Academy/Linux-public/mai
+n/scripts/runmon.sh
+
+Nastavím práva 700:
+
+sudo chmod 700 /root/runmon.sh
+
+4. Nastavení usera automata
+------------------------------
+Dle zadaní smím povolil eskalaci prav na roota(sudo) pouze pro script /root/runmon.sh. Provedu tak, že edituji /etc/suders příkazem:
+
+
+sudo visudo --> dopíši na poslední řádek --> automata ALL=(ALL) NOPASSWD: /root/runmon.sh
+
+5. Nastavení crontabu
+----------------------
+Dle zadaní edituji automata crontab pomoci příkazu:
+
+sudo crontab -e -u automata --> vložím 2 řádky:
+
+0 8-17/2 * * 1-5 sudo /root/runmon.sh
+0 22 * * 7 zip -m /home/automata/mon_archive.zip /monitoring/*
